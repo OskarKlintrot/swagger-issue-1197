@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Swashbuckle.Swagger;
+using Swashbuckle.Swagger.Annotations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -7,33 +9,47 @@ using System.Web.Http;
 
 namespace Swagger.Controllers
 {
+    [RoutePrefix("Values")]
     public class ValuesController : ApiController
     {
-        // GET api/values
-        public IEnumerable<string> Get()
+        [HttpGet]
+        [Route("Working")]
+        [SwaggerResponse(HttpStatusCode.OK, "OK", typeof(WorkingGetResponse))]
+        public IHttpActionResult Working()
         {
-            return new string[] { "value1", "value2" };
+            return Ok(new WorkingGetResponse { Strings = new List<string> { "value1", "value2" } });
         }
 
-        // GET api/values/5
-        public string Get(int id)
+        [HttpGet]
+        [Route("NotWorking")]
+        [SwaggerResponse(HttpStatusCode.OK, "OK", typeof(NotWorkingGetResponse))]
+        public IHttpActionResult NotWorking()
         {
-            return "value";
+            return Ok(new NotWorkingGetResponse { Strings = new List<string> { "value1", "value2" } });
         }
+    }
 
-        // POST api/values
-        public void Post([FromBody]string value)
-        {
-        }
+    internal class NotWorkingGetResponse : BaseGetResponse
+    {
+        public IEnumerable<string> Strings { get; set; } = new List<string>();
+    }
 
-        // PUT api/values/5
-        public void Put(int id, [FromBody]string value)
-        {
-        }
+    [SwaggerSchemaFilter(typeof(SingleJsonArraySchemaFilter))]
+    internal class WorkingGetResponse : BaseGetResponse
+    {
+        public IEnumerable<string> Strings { get; set; } = new List<string>();
+    }
 
-        // DELETE api/values/5
-        public void Delete(int id)
+    [SwaggerSchemaFilter(typeof(SingleJsonArraySchemaFilter))]
+    internal abstract class BaseGetResponse
+    {
+    }
+
+    internal class SingleJsonArraySchemaFilter : ISchemaFilter
+    {
+        public void Apply(Schema schema, SchemaRegistry schemaRegistry, Type type)
         {
+            schema.@default = new { working = true };
         }
     }
 }
